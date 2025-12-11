@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <title>Controle Felito — Pedidos por Nº</title>
+  <title>Controle Felito — Pedidos por Nº (com preços)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://fonts.googleapis.com/css2?family=Alice&display=swap" rel="stylesheet">
   <style>
@@ -34,24 +34,25 @@
     .cart { border:1px dashed #c9c1b6; padding:8px; border-radius:8px; background:#fffdf8; margin-bottom:10px; }
     .cart-list { margin-top:8px; font-size:0.9rem; }
     .small { font-size:0.85rem; color:#555; }
-    @media(max-width:600px){
-      body{padding:8px;} .app{padding:12px;} table{min-width:600px;} form{grid-template-columns:1fr 1fr;}
-    }
+    @media(max-width:600px){ body{padding:8px;} .app{padding:12px;} table{min-width:600px;} form{grid-template-columns:1fr 1fr;} }
   </style>
 </head>
 <body>
   <div class="app">
     <div class="logo"><h1>FELITO</h1></div>
-    <div class="subtitle">Use o fluxo: montar item → adicionar ao pedido atual → finalizar pedido</div>
+    <div class="subtitle">Fluxo: montar item → adicionar ao pedido atual → finalizar pedido. Valores auto preenchidos (editáveis).</div>
 
     <div class="topbar">
       <div class="badge">Pedido atual: <span id="pedidoAtualBadge">001</span></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button id="btnNovoPedido" class="btn-secondary">Iniciar novo pedido</button>
         <button id="btnForcarNumero" class="btn-secondary">Definir nº manual</button>
-        <button id="btnExport" class="btn-secondary">Exportar (JSON)</button>
-        <button id="btnImport" class="btn-secondary">Importar (JSON)</button>
-        <input type="file" id="fileImport" accept="application/json" style="display:none"/>
+        <button id="btnExportCSV" class="btn-secondary">Exportar CSV</button>
+        <button id="btnImportCSV" class="btn-secondary">Importar CSV</button>
+        <button id="btnExportJSON" class="btn-secondary">Exportar JSON</button>
+        <button id="btnImportJSON" class="btn-secondary">Importar JSON</button>
+        <input type="file" id="fileImportCSV" accept=".csv,text/csv" style="display:none"/>
+        <input type="file" id="fileImportJSON" accept="application/json" style="display:none"/>
       </div>
     </div>
 
@@ -96,11 +97,11 @@
       </div>
     </form>
 
-    <!-- Carrinho temporário (mostra itens do pedido atual antes de finalizar) -->
+    <!-- Carrinho temporário -->
     <div class="cart">
       <div><strong>Resumo do pedido atual (<span id="pedidoAtualBadge2">001</span>)</strong> <span class="small">adicione itens e clique em "Finalizar pedido" para gravar</span></div>
       <div id="cartList" class="cart-list"><em>Nenhum item adicionado ainda.</em></div>
-      <div style="margin-top:8px;" class="small">Dica: clique em "Iniciar novo pedido" para começar outro pedido manualmente (ou após finalizar o atual o número incrementa automaticamente).</div>
+      <div style="margin-top:8px;" class="small">Dica: o campo Valor é preenchido automaticamente ao escolher sabor/tamanho, mas você pode editar para aplicar desconto.</div>
     </div>
 
     <!-- Tabela principal -->
@@ -120,21 +121,34 @@
   </div>
 
 <script>
-/* ====== STORAGE KEYS ====== */
-const ITEMS_KEY = "felito_items_v3";
-const NEXT_ORDER_KEY = "felito_next_order_v3";
-const CART_KEY = "felito_cart_v3";
+/* ========== Config de preços ========== */
+/* valores padrão por tamanho */
+const priceStandard = {
+  "240 mL": 17.00,
+  "480 mL": 30.00,
+  "1,5 L": 85.00
+};
+/* sabores premium usam preços diferentes */
+const premiumFlavors = ["Romeu & Julieta","Doce de Leite com Coco","Strogonoff de Nozes"];
+const pricePremium = {
+  "240 mL": 20.00,
+  "480 mL": 35.00,
+  "1,5 L": 100.00
+};
 
-/* ====== DOM ====== */
+/* ========== Storage keys ========== */
+const ITEMS_KEY = "felito_items_v4";
+const NEXT_ORDER_KEY = "felito_next_order_v4";
+const CART_KEY = "felito_cart_v4";
+
+/* ========== DOM ========== */
 const lista = document.getElementById("lista");
 const countEl = document.getElementById("count");
 const sumTotalEl = document.getElementById("sumTotal");
 const pedidoBadge = document.getElementById("pedidoAtualBadge");
 const pedidoBadge2 = document.getElementById("pedidoAtualBadge2");
 const cartListEl = document.getElementById("cartList");
-const fileImport = document.getElementById("fileImport");
 
-/* inputs */
 const clienteIn = document.getElementById("cliente");
 const tamanhoIn = document.getElementById("tamanho");
 const quantidadeIn = document.getElementById("quantidade");
@@ -142,28 +156,56 @@ const saborIn = document.getElementById("sabor");
 const valorIn = document.getElementById("valor");
 const statusIn = document.getElementById("status");
 
-/* buttons */
 const btnAdicionarCarrinho = document.getElementById("btnAdicionarCarrinho");
 const btnFinalizarPedido = document.getElementById("btnFinalizarPedido");
 const btnCancelarCarrinho = document.getElementById("btnCancelarCarrinho");
 const btnNovoPedido = document.getElementById("btnNovoPedido");
 const btnForcarNumero = document.getElementById("btnForcarNumero");
-const btnExport = document.getElementById("btnExport");
-const btnImport = document.getElementById("btnImport");
+const btnExportCSV = document.getElementById("btnExportCSV");
+const btnImportCSV = document.getElementById("btnImportCSV");
+const btnExportJSON = document.getElementById("btnExportJSON");
+const btnImportJSON = document.getElementById("btnImportJSON");
+const fileImportCSV = document.getElementById("fileImportCSV");
+const fileImportJSON = document.getElementById("fileImportJSON");
 
-/* ====== DADOS ====== */
+/* ========== dados ========== */
 let items = JSON.parse(localStorage.getItem(ITEMS_KEY)) || [];
-let cart = JSON.parse(localStorage.getItem(CART_KEY)) || []; // itens temporários do pedido atual
+let cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
 let nextOrder = Number(localStorage.getItem(NEXT_ORDER_KEY) || 1);
 
-/* ====== HELPERS ====== */
+/* ========== helpers ========== */
 function pad(n){ return String(n).padStart(3,'0'); }
 function getCurrentOrder(){ return pad(nextOrder); }
 function saveAll(){ localStorage.setItem(ITEMS_KEY, JSON.stringify(items)); localStorage.setItem(CART_KEY, JSON.stringify(cart)); localStorage.setItem(NEXT_ORDER_KEY, String(nextOrder)); }
 function formatBRL(v){ return "R$ " + Number(v).toFixed(2); }
 function today(){ return new Date().toISOString().slice(0,10); }
 
-/* ====== RENDER ====== */
+/* determina preço padrão por sabor+tamanho */
+function defaultPriceFor(sabor, tamanho) {
+  if (premiumFlavors.includes(sabor)) return pricePremium[tamanho] ?? priceStandard[tamanho];
+  return priceStandard[tamanho] ?? 0;
+}
+
+/* ========== UI: preenche preço automaticamente quando muda sabor/tamanho ========== */
+function preencherPrecoPadrao() {
+  const sabor = saborIn.value;
+  const tamanho = tamanhoIn.value;
+  const preco = defaultPriceFor(sabor, tamanho);
+  if (preco) {
+    // só preenche se campo vazio ou igual ao anterior padrão
+    const atual = Number(valorIn.value || 0);
+    // se campo vazio ou atual é zero, ou atual corresponde ao outro padrão antigo, atualiza
+    if (!valorIn.value || atual === 0 || atual === defaultPriceFor(sabor, tamanho) || atual === priceStandard[tamanho] || premiumFlavors.includes(sabor) && (atual === pricePremium[tamanho])) {
+      valorIn.value = preco.toFixed(2);
+    } else {
+      // deixa o valor editável (usuário aplicou desconto) — não sobrescreve
+    }
+  }
+}
+saborIn.addEventListener("change", preencherPrecoPadrao);
+tamanhoIn.addEventListener("change", preencherPrecoPadrao);
+
+/* ========== render carrinho & tabela ========== */
 function renderCart(){
   pedidoBadge.textContent = getCurrentOrder();
   pedidoBadge2.textContent = getCurrentOrder();
@@ -213,140 +255,257 @@ function renderTable(){
   sumTotalEl.innerText = formatBRL(total);
 }
 
-/* ====== CRUD e ações ====== */
-function removerDoCarrinho(i){
-  cart.splice(i,1);
-  saveAll();
-  renderCart();
-}
-
+/* ========== ações ========== */
+function removerDoCarrinho(i){ cart.splice(i,1); saveAll(); renderCart(); }
 btnAdicionarCarrinho.onclick = () => {
-  // validação básica
   const cliente = (clienteIn.value || "Cliente").trim();
   const tam = tamanhoIn.value;
   const qtd = Number(quantidadeIn.value) || 1;
   const sabor = saborIn.value;
   const valor = Number(valorIn.value) || 0;
   const status = statusIn.value;
-
   if(!sabor || !tam || qtd <= 0 || valor <= 0){ alert("Preencha Sabor, Tamanho, Quantidade e Valor (maior que zero)."); return; }
-
-  const item = {
-    pedido: getCurrentOrder(),
-    data: today(),
-    cliente,
-    tam,
-    qtd,
-    sabor,
-    valor,
-    status
-  };
+  const item = { pedido: getCurrentOrder(), data: today(), cliente, tam, qtd, sabor, valor, status };
   cart.push(item);
-  saveAll();
-  renderCart();
-
-  // opcional: limpa só o sabor e quantidade (pra adicionar próximo item rápido)
-  saborIn.selectedIndex = 0;
+  saveAll(); renderCart();
+  // limpa só o sabor/quantidade/valor parcialmente para agilizar próxima inclusão
   quantidadeIn.value = 1;
-  valorIn.value = "";
+  // mantém cliente (útil quando é o mesmo cliente)
+  valorIn.value = ""; // força preencher automático quando usuário escolher próximo sabor/tamanho
 };
-
 btnFinalizarPedido.onclick = () => {
   if(!cart.length){ alert("Carrinho vazio — adicione pelo menos 1 item ao pedido."); return; }
-  // copia itens do cart para items
   cart.forEach(it => items.push({...it}));
-  // esvazia cart, incrementa nextOrder
   cart = [];
   nextOrder = nextOrder + 1;
   saveAll();
-  renderCart();
-  renderTable();
+  renderCart(); renderTable();
   alert("Pedido finalizado e gravado. Nº do próximo pedido: " + getCurrentOrder());
 };
-
 btnCancelarCarrinho.onclick = () => {
   if(!cart.length){ alert("Carrinho vazio."); return; }
   if(!confirm("Cancelar este pedido atual? Todos os itens no carrinho serão perdidos.")) return;
-  cart = [];
-  saveAll();
-  renderCart();
+  cart = []; saveAll(); renderCart();
 };
+function atualizarStatus(i, novo){ items[i].status = novo; saveAll(); renderTable(); }
+function excluir(i){ if(!confirm("Excluir este item?")) return; items.splice(i,1); saveAll(); renderTable(); }
+function duplicarItem(i){ const it = items[i]; items.push({...it}); saveAll(); renderTable(); }
 
-function atualizarStatus(i, novo){
-  items[i].status = novo;
-  saveAll();
-  renderTable();
-}
-
-function excluir(i){
-  if(!confirm("Excluir este item?")) return;
-  items.splice(i,1);
-  saveAll();
-  renderTable();
-}
-
-function duplicarItem(i){
-  const it = items[i];
-  const copy = {...it};
-  items.push(copy);
-  saveAll();
-  renderTable();
-}
-
-/* iniciar novo pedido manual (reseta o cart e aumenta nextOrder) */
+/* novo pedido manual */
 btnNovoPedido.onclick = () => {
   if(cart.length){
     if(!confirm("Ainda há itens no carrinho do pedido atual. Deseja descartá-los e iniciar novo pedido?")) return;
     cart = [];
   }
   nextOrder = nextOrder + 1;
-  saveAll();
-  renderCart();
+  saveAll(); renderCart();
 };
-
-/* definir número manual */
 btnForcarNumero.onclick = () => {
   const resposta = prompt("Digite o número do pedido (apenas número). Ex: 5 -> 005", String(Number(nextOrder)));
   if(resposta === null) return;
   const n = Number(resposta);
   if(!Number.isInteger(n) || n < 1){ alert("Número inválido."); return; }
-  nextOrder = n;
-  saveAll();
-  renderCart();
+  nextOrder = n; saveAll(); renderCart();
 };
 
-/* export/import */
-btnExport.onclick = () => {
+/* ========== Export / Import CSV (Excel) ========== */
+
+/* helper CSV: escape; we will use semicolon (;) as separator for better Excel compatibility in BR */
+function toCSV(rows) {
+  // rows: array of arrays
+  const sep = ";";
+  return rows.map(r => r.map(cell => {
+    if (cell === null || cell === undefined) return "";
+    const s = String(cell);
+    // escape quotes by doubling, wrap in quotes if contains sep, quotes or newline
+    if (s.includes(sep) || s.includes('"') || s.includes("\n") || s.includes("\r")) {
+      return `"${s.replace(/"/g,'""')}"`;
+    }
+    return s;
+  }).join(sep)).join("\n");
+}
+
+/* Export CSV (current items) */
+btnExportCSV.onclick = () => {
+  // columns: pedido;data;cliente;tam;qtd;sabor;valor;status
+  const rows = [["pedido","data","cliente","tam","qtd","sabor","valor","status"]];
+  items.forEach(it => rows.push([it.pedido,it.data,it.cliente,it.tam,it.qtd,it.sabor, Number(it.valor).toFixed(2), it.status]));
+  const csv = toCSV(rows);
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `felito_items_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+/* Import CSV: parse basic CSV with semicolon or comma autodetect; ask append/substitute */
+btnImportCSV.onclick = () => fileImportCSV.click();
+fileImportCSV.onchange = async (e) => {
+  const f = e.target.files[0]; if(!f) return;
+  const text = await f.text();
+  const sep = detectSeparator(text);
+  const rows = parseCSV(text, sep);
+  if (!rows.length) { alert("Arquivo vazio ou formato inválido."); fileImportCSV.value=""; return; }
+  // assume header present
+  const header = rows[0].map(h => h.trim().toLowerCase());
+  const needed = ["pedido","data","cliente","tam","qtd","sabor","valor","status"];
+  // check columns present
+  const missing = needed.filter(n => !header.includes(n));
+  if(missing.length) {
+    alert("Colunas faltando no CSV: " + missing.join(", ") + "\nColunas esperadas: " + needed.join(", "));
+    fileImportCSV.value=""; return;
+  }
+  const ask = confirm("Importar CSV: clicar OK para **SUBSTITUIR** todos os dados atuais. Cancelar para **ACRESCENTAR** (append).");
+  const startIdx = 1; // skip header
+  const imported = [];
+  for(let i=startIdx;i<rows.length;i++){
+    const row = rows[i];
+    if(row.length === 0) continue;
+    const obj = {};
+    for(let c=0;c<row.length;c++){
+      const key = header[c];
+      obj[key] = row[c];
+    }
+    // normalize
+    const item = {
+      pedido: String(obj.pedido || "").trim() || getCurrentOrder(),
+      data: String(obj.data || "").trim() || today(),
+      cliente: String(obj.cliente || "Cliente").trim(),
+      tam: String(obj.tam || "240 mL").trim(),
+      qtd: Number(obj.qtd || 1),
+      sabor: String(obj.sabor || "").trim(),
+      valor: Number((obj.valor || "0").toString().replace(",",".") || 0),
+      status: String(obj.status || "A Fazer")
+    };
+    imported.push(item);
+  }
+  if(ask){
+    items = imported;
+  } else {
+    items = items.concat(imported);
+  }
+  saveAll(); renderTable(); alert("Importação concluída. Linhas importadas: " + imported.length);
+  fileImportCSV.value = "";
+};
+
+/* ========== Export / Import JSON (backup) ========== */
+btnExportJSON.onclick = () => {
   const payload = { items, cart, nextOrder };
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url; a.download = "felito_backup_" + new Date().toISOString().slice(0,19).replace(/[:]/g,"") + ".json";
-  a.click();
-  URL.revokeObjectURL(url);
+  a.click(); URL.revokeObjectURL(url);
 };
-
-btnImport.onclick = () => fileImport.click();
-fileImport.onchange = async (evt) => {
-  const f = evt.target.files[0]; if(!f) return;
+btnImportJSON.onclick = () => fileImportJSON.click();
+fileImportJSON.onchange = async (e) => {
+  const f = e.target.files[0]; if(!f) return;
   const text = await f.text();
-  try{
+  try {
     const data = JSON.parse(text);
-    if(!data || !Array.isArray(data.items)) throw new Error("Formato do arquivo inválido");
-    if(!confirm("Importar irá substituir os dados atuais (itens + carrinho + nº do pedido). Continuar?")) return;
+    if(!data || !Array.isArray(data.items)) throw new Error("Formato inválido");
+    if(!confirm("Importar JSON substituirá itens + carrinho + número do pedido. Continuar?")) return;
     items = data.items || [];
     cart = data.cart || [];
     nextOrder = Number(data.nextOrder) || 1;
-    saveAll();
-    renderCart();
-    renderTable();
-    fileImport.value = "";
-  }catch(err){ alert("Erro ao importar: " + err.message); }
+    saveAll(); renderCart(); renderTable(); alert("Importação JSON concluída.");
+  } catch(err){ alert("Erro ao importar JSON: " + err.message); }
+  fileImportJSON.value = "";
 };
 
-/* inicial */
+/* ========== CSV parsing utils ========== */
+function detectSeparator(text){
+  // detect ; or , by counting occurrences on first non-empty line
+  const lines = text.split(/\r\n|\n/).filter(l=>l.trim().length>0);
+  if(!lines.length) return ";";
+  const first = lines[0];
+  const countSemicolon = (first.match(/;/g)||[]).length;
+  const countComma = (first.match(/,/g)||[]).length;
+  return countSemicolon >= countComma ? ";" : ",";
+}
+function parseCSV(text, sep=";"){
+  const rows = [];
+  let cur = [];
+  let i = 0;
+  let sb = "";
+  let inQuotes = false;
+  while(i < text.length){
+    const ch = text[i];
+    const next = text[i+1];
+    if(ch === '"'){
+      if(inQuotes && next === '"'){ // escaped quote
+        sb += '"'; i += 2; continue;
+      }
+      inQuotes = !inQuotes;
+      i++; continue;
+    }
+    if(!inQuotes && (ch === sep || ch === '\n' || ch === '\r')) {
+      if(ch === sep){
+        cur.push(sb);
+        sb = "";
+        i++; continue;
+      }
+      // newline
+      cur.push(sb);
+      sb = "";
+      rows.push(cur);
+      cur = [];
+      // handle CRLF
+      if(ch === '\r' && text[i+1] === '\n') i+=2; else i++;
+      continue;
+    }
+    sb += ch;
+    i++;
+  }
+  // push remainder
+  if(sb.length>0 || cur.length>0){
+    cur.push(sb);
+    rows.push(cur);
+  }
+  return rows;
+}
+
+/* ========== inicial ======== */
 if(!localStorage.getItem(NEXT_ORDER_KEY)) { localStorage.setItem(NEXT_ORDER_KEY, String(nextOrder)); }
 if(!localStorage.getItem(ITEMS_KEY)) { localStorage.setItem(ITEMS_KEY, JSON.stringify([])); }
+dataInit();
+renderCart(); renderTable();
+
+/* helper prefill data & set default valor when page loads */
+function dataInit(){
+  // set today's date in items when created later
+  // preseta o preco default inicial
+  preencherPrecoPadrao();
+}
+
+/* preencher preco padrao logic (copiado/adaptado) */
+function defaultPriceFor(sabor, tamanho) {
+  if (premiumFlavors.includes(sabor)) return pricePremium[tamanho] ?? priceStandard[tamanho];
+  return priceStandard[tamanho] ?? 0;
+}
+/* make sure preencherPrecoPadrao used in this file is consistent */
+function preencherPrecoPadrao() {
+  const sabor = saborIn.value;
+  const tamanho = tamanhoIn.value;
+  const preco = defaultPriceFor(sabor, tamanho);
+  if (preco) {
+    const atual = Number(valorIn.value || 0);
+    if (!valorIn.value || atual === 0) {
+      valorIn.value = preco.toFixed(2);
+    }
+  }
+}
+
+/* small global functions used in template (remove eslint annoy) */
+window.atualizarStatus = function(i, novo){ atualizarStatus(i, novo); };
+window.excluir = excluir;
+window.duplicarItem = duplicarItem;
+window.removerDoCarrinho = removerDoCarrinho;
+
+/* inicial render */
+preencherPrecoPadrao();
 renderCart();
 renderTable();
 </script>

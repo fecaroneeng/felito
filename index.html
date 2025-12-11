@@ -1,373 +1,357 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <title>Controle de Vendas - Felito</title>
+  <meta charset="utf-8" />
+  <title>Controle Felito — Fidelidade</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://fonts.googleapis.com/css2?family=Alice&display=swap" rel="stylesheet">
-
   <style>
-    :root {
-      --green: #012b29;
-      --yellow: #e9b42e;
-      --cream: #f2efeb;
-    }
-
-    * {
-      box-sizing: border-box;
-      font-family: 'Alice', serif;
-    }
-
-    body {
-      margin: 0;
-      padding: 16px;
-      background: var(--green);
-      color: var(--green);
-    }
-
-    .app {
-      max-width: 1100px;
-      margin: auto;
-      background: var(--cream);
-      padding: 20px;
-      border-radius: 20px;
-      border: 2px solid var(--yellow);
-      box-shadow: 0 10px 26px rgba(0,0,0,0.35);
-    }
-
-    .logo {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-
-    .logo h1 {
-      margin: 0;
-      letter-spacing: 4px;
-      color: var(--yellow);
-    }
-
-    .logo span {
-      font-size: 0.75rem;
-      letter-spacing: 0.3em;
-    }
-
-    .subtitle {
-      text-align: center;
-      margin-bottom: 20px;
-      font-size: 0.9rem;
-    }
-
-    form {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      gap: 12px;
-      margin-bottom: 15px;
-    }
-
-    label {
-      font-size: 0.8rem;
-    }
-
-    input, select {
-      width: 100%;
-      padding: 8px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-
-    button {
-      border-radius: 999px;
-      padding: 10px;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .btn-primary {
-      background: var(--yellow);
-      color: var(--green);
-    }
-
-    .btn-secondary {
-      background: #ded6cb;
-    }
-
-    /* WRAPPER DA TABELA PARA CELULAR */
-    .table-wrapper {
-      width: 100%;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch; /* rolagem suave no iOS */
-      margin-top: 10px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.9rem;
-      min-width: 650px; /* garante que a tabela não aperte demais; no celular rola pro lado */
-    }
-
-    th, td {
-      padding: 8px;
-      border-bottom: 1px solid #ddd;
-      white-space: nowrap; /* evita quebrar linhas estranhas em alguns campos */
-    }
-
-    th {
-      background: #e6dfd4;
-    }
-
-    tr:nth-child(even) td {
-      background: #f9f6f1;
-    }
-
-    .status-cell {
-      padding: 0;
-    }
-
-    .status-cell select {
-      width: 100%;
-      border: none;
-      padding: 6px 8px;
-      background: transparent;
-      font-weight: bold;
-      font-size: 0.8rem;
-      cursor: pointer;
-    }
-
-    .status-A-Fazer { background: #fff3cd; }
-    .status-À-Entregar { background: #cce5ff; }
-    .status-Entregue   { background: #d4edda; }
-    .status-Pago       { background: #e9b42e; }
-    .status-Cancelado  { background: #f8d7da; }
-
-    .actions button {
-      margin: 2px;
-      font-size: 0.75rem;
-    }
-
-    .totals {
-      margin-top: 10px;
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.9rem;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    /* AJUSTES ESPECÍFICOS PARA TELAS PEQUENAS (iPhone etc.) */
-    @media (max-width: 600px) {
-      body {
-        padding: 8px;
-      }
-
-      .app {
-        padding: 12px;
-        border-radius: 16px;
-      }
-
-      form {
-        grid-template-columns: 1fr 1fr; /* duas colunas no celular pra não ficar muito comprido */
-        gap: 8px;
-      }
-
-      table {
-        font-size: 0.8rem;
-        min-width: 600px;
-      }
-
-      th, td {
-        padding: 6px 4px;
-      }
-
-      .totals {
-        flex-direction: column;
-        align-items: flex-start;
-      }
+    :root { --green:#012b29; --yellow:#e9b42e; --cream:#f2efeb; }
+    * { box-sizing:border-box; font-family: 'Alice', serif; }
+    body { margin:0; padding:12px; background:var(--green); color:var(--green); }
+    .app { max-width:1100px; margin:auto; background:var(--cream); padding:16px; border-radius:16px; border:2px solid var(--yellow); box-shadow:0 8px 20px rgba(0,0,0,0.25); }
+    .logo { text-align:center; margin-bottom:8px; }
+    .logo h1 { margin:0; color:var(--yellow); letter-spacing:4px; }
+    .subtitle { text-align:center; margin-bottom:12px; font-size:0.95rem; }
+    form { display:grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap:8px; margin-bottom:10px; }
+    label { display:block; font-size:0.8rem; margin-bottom:4px; }
+    input, select { width:100%; padding:8px; border-radius:8px; border:1px solid #ccc; background:#fffaf6; }
+    button { border-radius:999px; padding:8px 12px; border:none; cursor:pointer; font-weight:700; }
+    .btn-primary { background:var(--yellow); color:var(--green); }
+    .btn-secondary { background:#ded6cb; color:var(--green); }
+    .controls { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+    .table-wrapper { width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; margin-top:6px; }
+    table { width:100%; border-collapse:collapse; min-width:720px; font-size:0.9rem; }
+    th, td { padding:8px; border-bottom:1px solid #ddd; white-space:nowrap; text-align:left; }
+    th { background:#e6dfd4; }
+    tr:nth-child(even) td { background:#f9f6f1; }
+    .status-cell select { border:none; padding:6px; background:transparent; font-weight:700; cursor:pointer; }
+    .status-A-Fazer{background:#fff3cd;} .status-À-Entregar{background:#cce5ff;} .status-Entregue{background:#d4edda;} .status-Pago{background:var(--yellow);} .status-Cancelado{background:#f8d7da;}
+    .actions button { margin:2px; font-size:0.85rem; }
+    .totals { display:flex; justify-content:space-between; gap:12px; margin-top:8px; flex-wrap:wrap; }
+    .report-area{ margin-top:14px; border-top:1px dashed #c9c1b6; padding-top:10px; }
+    .order-summary{ margin-top:8px; font-size:0.9rem; }
+    @media(max-width:600px){
+      body{padding:8px;} .app{padding:12px;} table{min-width:600px;} form{grid-template-columns:1fr 1fr;}
     }
   </style>
 </head>
-
 <body>
-<div class="app">
+  <div class="app">
+    <div class="logo"><h1>FELITO</h1></div>
+    <div class="subtitle">Cadastre itens (um sabor por linha). Use o campo <strong>Pedido</strong> para agrupar.</div>
 
-  <div class="logo">
-    <h1>FELITO</h1>
-    <span>HOMEMADE ICE CREAM</span>
+    <form id="form-add">
+      <div>
+        <label>Pedido (opcional)</label>
+        <input id="pedidoId" placeholder="Ex: PED-001 (vazio = autogerado)"/>
+      </div>
+      <div>
+        <label>Data</label>
+        <input type="date" id="data" required />
+      </div>
+      <div>
+        <label>Cliente</label>
+        <input id="cliente" placeholder="Nome do cliente"/>
+      </div>
+      <div>
+        <label>Tamanho</label>
+        <select id="tamanho" required>
+          <option>240 mL</option><option>480 mL</option><option>1,5 L</option>
+        </select>
+      </div>
+      <div>
+        <label>Quantidade</label>
+        <input type="number" id="quantidade" min="1" value="1" required />
+      </div>
+      <div>
+        <label>Sabor</label>
+        <select id="sabor" required>
+          <option>Abacate</option><option>Baunilha</option><option>Doce de Leite</option><option>Doce de Leite com Coco</option><option>Limão com Manjericão</option><option>Limão Siciliano</option><option>Maracujá</option><option>Morango</option><option>Romeu & Julieta</option><option>Strogonoff de Nozes</option>
+        </select>
+      </div>
+      <div>
+        <label>Valor Unitário (R$)</label>
+        <input type="number" id="valor" step="0.01" required />
+      </div>
+      <div>
+        <label>Status</label>
+        <select id="status">
+          <option>A Fazer</option><option>À Entregar</option><option>Entregue</option><option>Pago</option><option>Cancelado</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:8px;">
+        <button class="btn-primary" type="submit">Adicionar Item</button>
+        <button id="btnDuplicar" type="button" class="btn-secondary">Duplicar último</button>
+      </div>
+    </form>
+
+    <div class="controls">
+      <input id="filtroPedido" placeholder="Filtrar por Pedido (id)" style="padding:8px;border-radius:8px;border:1px solid #ccc;background:#fffaf6"/>
+      <input id="filtroCliente" placeholder="Filtrar por Cliente" style="padding:8px;border-radius:8px;border:1px solid #ccc;background:#fffaf6"/>
+      <button id="btnLimpar" class="btn-secondary">Limpar tudo</button>
+      <button id="btnExport" class="btn-secondary">Exportar (JSON)</button>
+      <button id="btnImport" class="btn-secondary">Importar (JSON)</button>
+      <input type="file" id="fileImport" accept="application/json" style="display:none"/>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Pedido</th><th>Data</th><th>Cliente</th><th>Tam.</th><th>Qtd</th><th>Sabor</th><th>R$ Unit.</th><th>Total</th><th>Status</th><th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="lista"></tbody>
+      </table>
+    </div>
+
+    <div class="totals">
+      <div>Itens: <strong id="count">0</strong></div>
+      <div>Total (visível): <strong id="sumTotal">R$ 0,00</strong></div>
+    </div>
+
+    <div class="report-area">
+      <h3>Fidelidade / Selinhos</h3>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <label style="font-size:0.9rem;">Valor por selo:</label>
+        <input id="valorSelo" type="number" value="30" step="1" style="width:100px;padding:6px;border-radius:6px;border:1px solid #ccc;background:#fffaf6"/>
+        <label style="font-size:0.9rem;">Dar 1 selo mínimo por pedido?</label>
+        <select id="minSelo">
+          <option value="false">Não</option>
+          <option value="true">Sim</option>
+        </select>
+        <button id="btnGerarFidelidade" class="btn-primary">Gerar relatório fidelidade</button>
+        <button id="btnResumoClientes" class="btn-secondary">Resumo por cliente</button>
+      </div>
+
+      <div id="reportOutput" class="order-summary"></div>
+    </div>
   </div>
-
-  <div class="subtitle">Controle simples de pedidos 🍨</div>
-
-  <form id="form">
-    <div>
-      <label>Data</label>
-      <input type="date" id="data" required />
-    </div>
-    <div>
-      <label>Cliente</label>
-      <input type="text" id="cliente" />
-    </div>
-    <div>
-      <label>Tamanho</label>
-      <select id="tamanho" required>
-        <option>240 mL</option>
-        <option>480 mL</option>
-        <option>1,5 L</option>
-      </select>
-    </div>
-    <div>
-      <label>Quantidade</label>
-      <input type="number" id="quantidade" value="1" min="1" required />
-    </div>
-    <div>
-      <label>Sabor</label>
-      <select id="sabor" required>
-        <option>Abacate</option>
-        <option>Baunilha</option>
-        <option>Doce de Leite</option>
-        <option>Doce de Leite com Coco</option>
-        <option>Limão com Manjericão</option>
-        <option>Limão Siciliano</option>
-        <option>Maracujá</option>
-        <option>Morango</option>
-        <option>Romeu & Julieta</option>
-        <option>Strogonoff de Nozes</option>
-      </select>
-    </div>
-    <div>
-      <label>Valor Unitário</label>
-      <input type="number" id="valor" step="0.01" required />
-    </div>
-    <div>
-      <label>Status</label>
-      <select id="status">
-        <option>A Fazer</option>
-        <option>À Entregar</option>
-        <option>Entregue</option>
-        <option>Pago</option>
-        <option>Cancelado</option>
-      </select>
-    </div>
-    <button class="btn-primary">Adicionar</button>
-  </form>
-
-  <div class="table-wrapper">
-    <table>
-      <thead>
-        <tr>
-          <th>Data</th>
-          <th>Cliente</th>
-          <th>Tam.</th>
-          <th>Qtd</th>
-          <th>Sabor</th>
-          <th>R$ Unit.</th>
-          <th>Total</th>
-          <th>Status</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody id="lista"></tbody>
-    </table>
-  </div>
-
-  <div class="totals">
-    <span>Pedidos: <strong id="qtd">0</strong></span>
-    <span>Total: <strong id="total">R$ 0,00</strong></span>
-  </div>
-</div>
 
 <script>
-let pedidos = JSON.parse(localStorage.getItem("felito")) || [];
-const lista = document.getElementById("lista");
+/* STORAGE KEY */
+const KEY = "felito_v2_items";
 
-const data       = document.getElementById("data");
-const cliente    = document.getElementById("cliente");
-const tamanho    = document.getElementById("tamanho");
-const quantidade = document.getElementById("quantidade");
-const sabor      = document.getElementById("sabor");
-const valor      = document.getElementById("valor");
-const statusSel  = document.getElementById("status");
+/* DOM */
+const listaEl = document.getElementById("lista");
+const countEl = document.getElementById("count");
+const sumTotalEl = document.getElementById("sumTotal");
+const form = document.getElementById("form-add");
+const fileImport = document.getElementById("fileImport");
+const reportOutput = document.getElementById("reportOutput");
 
-function salvar() {
-  localStorage.setItem("felito", JSON.stringify(pedidos));
+/* inputs */
+const pedidoIdIn = document.getElementById("pedidoId");
+const dataIn = document.getElementById("data");
+const clienteIn = document.getElementById("cliente");
+const tamanhoIn = document.getElementById("tamanho");
+const quantidadeIn = document.getElementById("quantidade");
+const saborIn = document.getElementById("sabor");
+const valorIn = document.getElementById("valor");
+const statusIn = document.getElementById("status");
+
+const filtroPedido = document.getElementById("filtroPedido");
+const filtroCliente = document.getElementById("filtroCliente");
+const btnLimpar = document.getElementById("btnLimpar");
+const btnExport = document.getElementById("btnExport");
+const btnImport = document.getElementById("btnImport");
+const btnDuplicar = document.getElementById("btnDuplicar");
+
+const valorSeloIn = document.getElementById("valorSelo");
+const minSeloSelect = document.getElementById("minSelo");
+const btnGerarFidelidade = document.getElementById("btnGerarFidelidade");
+const btnResumoClientes = document.getElementById("btnResumoClientes");
+
+/* dados */
+let items = JSON.parse(localStorage.getItem(KEY)) || [];
+
+/* helpers */
+function salvar(){ localStorage.setItem(KEY, JSON.stringify(items)); }
+function formatBRL(v){ return "R$ " + v.toFixed(2); }
+function gerarPedidoId(){ // PED-YYYYMMDD-HHMMSS
+  const d = new Date();
+  const s = d.toISOString().replace(/[:.]/g,"").slice(0,15);
+  return `PED-${s}`;
 }
 
-function formatarValor(v) {
-  return "R$ " + v.toFixed(2);
-}
-
-function atualizar() {
-  lista.innerHTML = "";
+/* render */
+function render(){
+  const filtroP = filtroPedido.value.trim().toLowerCase();
+  const filtroC = filtroCliente.value.trim().toLowerCase();
+  listaEl.innerHTML = "";
   let total = 0;
-
-  pedidos.forEach((p, i) => {
-    const valorTotal = p.qtd * p.valor;
+  items.forEach((it, i) => {
+    if (filtroP && !it.pedido.toLowerCase().includes(filtroP)) return;
+    if (filtroC && !it.cliente.toLowerCase().includes(filtroC)) return;
+    const valorTotal = (it.qtd * it.valor);
     total += valorTotal;
-
-    const statusClass = "status-" + p.status.replace(" ", "-");
-
-    lista.innerHTML += `
+    const statusClass = "status-" + it.status.replace(" ", "-");
+    listaEl.insertAdjacentHTML("beforeend", `
       <tr>
-        <td>${p.data}</td>
-        <td>${p.cliente}</td>
-        <td>${p.tam}</td>
-        <td>${p.qtd}</td>
-        <td>${p.sabor}</td>
-        <td>${formatarValor(p.valor)}</td>
-        <td>${formatarValor(valorTotal)}</td>
+        <td>${it.pedido}</td>
+        <td>${it.data}</td>
+        <td>${it.cliente}</td>
+        <td>${it.tam}</td>
+        <td>${it.qtd}</td>
+        <td>${it.sabor}</td>
+        <td>${formatBRL(it.valor)}</td>
+        <td>${formatBRL(valorTotal)}</td>
         <td class="status-cell ${statusClass}">
           <select onchange="atualizarStatus(${i}, this.value)">
-            <option ${p.status === "A Fazer" ? "selected" : ""}>A Fazer</option>
-            <option ${p.status === "À Entregar" ? "selected" : ""}>À Entregar</option>
-            <option ${p.status === "Entregue" ? "selected" : ""}>Entregue</option>
-            <option ${p.status === "Pago" ? "selected" : ""}>Pago</option>
-            <option ${p.status === "Cancelado" ? "selected" : ""}>Cancelado</option>
+            <option ${it.status==="A Fazer" ? "selected":""}>A Fazer</option>
+            <option ${it.status==="À Entregar" ? "selected":""}>À Entregar</option>
+            <option ${it.status==="Entregue" ? "selected":""}>Entregue</option>
+            <option ${it.status==="Pago" ? "selected":""}>Pago</option>
+            <option ${it.status==="Cancelado" ? "selected":""}>Cancelado</option>
           </select>
         </td>
-        <td class="actions">
-          <button class="btn-secondary" onclick="remover(${i})">Excluir</button>
+        <td>
+          <button onclick="duplicarItem(${i})" class="btn-secondary">Duplicar</button>
+          <button onclick="excluir(${i})" class="btn-secondary">Excluir</button>
         </td>
-      </tr>`;
+      </tr>
+    `);
   });
-
-  document.getElementById("qtd").innerText   = pedidos.length;
-  document.getElementById("total").innerText = formatarValor(total);
+  countEl.innerText = items.length;
+  sumTotalEl.innerText = formatBRL(total);
 }
 
-function remover(i) {
-  pedidos.splice(i, 1);
-  salvar();
-  atualizar();
+/* CRUD */
+function excluir(i){
+  if (!confirm("Excluir este item?")) return;
+  items.splice(i,1); salvar(); render();
+}
+function duplicarItem(i){
+  const it = items[i];
+  const copy = {...it};
+  items.push(copy); salvar(); render();
+}
+function atualizarStatus(i, novo){
+  items[i].status = novo;
+  salvar(); render();
 }
 
-function atualizarStatus(i, novoStatus) {
-  pedidos[i].status = novoStatus;
-  salvar();
-  atualizar(); // pra atualizar cor da linha/status
-}
-
-document.getElementById("form").onsubmit = e => {
+/* adicionar item */
+form.onsubmit = e => {
   e.preventDefault();
-  pedidos.push({
-    data: data.value,
-    cliente: cliente.value,
-    tam: tamanho.value,
-    qtd: +quantidade.value,
-    sabor: sabor.value,
-    valor: +valor.value,
-    status: statusSel.value
-  });
+  const pedido = pedidoIdIn.value.trim() || gerarPedidoId();
+  const novo = {
+    pedido,
+    data: dataIn.value || new Date().toISOString().slice(0,10),
+    cliente: clienteIn.value.trim() || "Cliente",
+    tam: tamanhoIn.value,
+    qtd: Number(quantidadeIn.value) || 1,
+    sabor: saborIn.value,
+    valor: Number(valorIn.value) || 0,
+    status: statusIn.value
+  };
+  items.push(novo);
   salvar();
-  atualizar();
-  e.target.reset();
-  data.value = new Date().toISOString().slice(0, 10);
-  quantidade.value = 1;
-  statusSel.value = "A Fazer";
+  render();
+  form.reset();
+  dataIn.value = new Date().toISOString().slice(0,10);
+  quantidadeIn.value = 1;
+  statusIn.value = "A Fazer";
 };
 
-data.value = new Date().toISOString().slice(0, 10);
-atualizar();
-</script>
+/* duplicar último para agilizar cadastro múltiplo */
+btnDuplicar.onclick = () => {
+  if (!items.length) return alert("Sem itens pra duplicar");
+  const last = items[items.length-1];
+  const copy = {...last};
+  // gera novo pedidoId se o campo estava vazio (mimetiza comportamento de agrupar)
+  if (!pedidoIdIn.value.trim()) copy.pedido = gerarPedidoId();
+  items.push(copy); salvar(); render();
+};
 
+/* filtros */
+[filtroPedido, filtroCliente].forEach(inp => inp.addEventListener("input", render));
+
+/* limpar tudo, exportar/importar */
+btnLimpar.onclick = () => {
+  if (!confirm("Apagar TODOS os itens?")) return;
+  items = []; salvar(); render();
+};
+
+btnExport.onclick = () => {
+  const blob = new Blob([JSON.stringify(items, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "felito_backup_" + new Date().toISOString().slice(0,19).replace(/[:]/g,"") + ".json";
+  a.click(); URL.revokeObjectURL(url);
+};
+
+btnImport.onclick = () => fileImport.click();
+fileImport.onchange = async (evt) => {
+  const f = evt.target.files[0]; if (!f) return;
+  const text = await f.text();
+  try{
+    const imported = JSON.parse(text);
+    if (!Array.isArray(imported)) throw new Error("Formato inválido");
+    if (!confirm("Substituir os dados atuais pelo arquivo importado?")) return;
+    items = imported; salvar(); render(); fileImport.value = "";
+  }catch(err){ alert("Erro importando: " + err.message); }
+};
+
+/* FIDELIDADE / SELINHOS */
+function agruparPorPedido(){
+  // retorna map pedidoId -> {pedido, cliente, data, itens:[], total}
+  const map = {};
+  items.forEach(it => {
+    if (!map[it.pedido]) map[it.pedido] = { pedido: it.pedido, cliente: it.cliente, data: it.data, itens: [], total:0 };
+    map[it.pedido].itens.push(it);
+    map[it.pedido].total += it.qtd * it.valor;
+  });
+  return map;
+}
+
+btnGerarFidelidade.onclick = () => {
+  const valorSelo = Number(valorSeloIn.value) || 30;
+  const minSelo = minSeloSelect.value === "true";
+  const map = agruparPorPedido();
+  const pedidos = Object.values(map).sort((a,b)=> a.data.localeCompare(b.data));
+  if (!pedidos.length){ reportOutput.innerHTML = "<p>Nenhum pedido cadastrado.</p>"; return; }
+
+  let html = `<p>Regra: R$ ${valorSelo} = 1 selo por pedido. Mínimo 1 selo? ${minSelo? "Sim":"Não"}.</p>`;
+  html += `<table style="width:100%;border-collapse:collapse;margin-top:8px;"><thead style="background:#e6dfd4"><tr><th>Pedido</th><th>Cliente</th><th>Data</th><th>Total</th><th>Selos</th></tr></thead><tbody>`;
+  pedidos.forEach(p => {
+    let selos = Math.floor(p.total / valorSelo);
+    if (minSelo && p.total > 0 && selos < 1) selos = 1;
+    html += `<tr><td>${p.pedido}</td><td>${p.cliente}</td><td>${p.data}</td><td>${formatBRL(p.total)}</td><td style="font-weight:700">${selos}</td></tr>`;
+  });
+  html += `</tbody></table>`;
+  reportOutput.innerHTML = html;
+};
+
+btnResumoClientes.onclick = () => {
+  const valorSelo = Number(valorSeloIn.value) || 30;
+  const minSelo = minSeloSelect.value === "true";
+  const map = agruparPorPedido();
+  const clientes = {}; // cliente -> totalSelos, pedidosCount, totalGasto
+  Object.values(map).forEach(p => {
+    let selos = Math.floor(p.total / valorSelo);
+    if (minSelo && p.total > 0 && selos < 1) selos = 1;
+    if (!clientes[p.cliente]) clientes[p.cliente] = { selos:0, gasto:0, pedidos:0 };
+    clientes[p.cliente].selos += selos;
+    clientes[p.cliente].gasto += p.total;
+    clientes[p.cliente].pedidos += 1;
+  });
+  const lista = Object.keys(clientes).sort();
+  if (lista.length === 0){ reportOutput.innerHTML = "<p>Nenhum pedido cadastrado.</p>"; return; }
+  let html = `<h4>Resumo por cliente</h4><table style="width:100%;border-collapse:collapse;margin-top:8px;"><thead style="background:#e6dfd4"><tr><th>Cliente</th><th>Selos</th><th>Pedidos</th><th>Total Gasto</th></tr></thead><tbody>`;
+  lista.forEach(c => {
+    const it = clientes[c];
+    html += `<tr><td>${c}</td><td style="font-weight:700">${it.selos}</td><td>${it.pedidos}</td><td>${formatBRL(it.gasto)}</td></tr>`;
+  });
+  html += `</tbody></table>`;
+  reportOutput.innerHTML = html;
+};
+
+/* inicializa */
+dataIn.value = new Date().toISOString().slice(0,10);
+render();
+
+</script>
 </body>
 </html>

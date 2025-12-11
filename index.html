@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <title>Controle de Vendas - Felito</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link href="https://fonts.googleapis.com/css2?family=Alice&display=swap" rel="stylesheet">
 
   <style>
@@ -93,16 +92,25 @@
       background: #ded6cb;
     }
 
+    /* WRAPPER DA TABELA PARA CELULAR */
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch; /* rolagem suave no iOS */
+      margin-top: 10px;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 10px;
       font-size: 0.9rem;
+      min-width: 650px; /* garante que a tabela não aperte demais; no celular rola pro lado */
     }
 
     th, td {
       padding: 8px;
       border-bottom: 1px solid #ddd;
+      white-space: nowrap; /* evita quebrar linhas estranhas em alguns campos */
     }
 
     th {
@@ -113,18 +121,25 @@
       background: #f9f6f1;
     }
 
-    .status {
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 0.75rem;
+    .status-cell {
+      padding: 0;
+    }
+
+    .status-cell select {
+      width: 100%;
+      border: none;
+      padding: 6px 8px;
+      background: transparent;
       font-weight: bold;
+      font-size: 0.8rem;
+      cursor: pointer;
     }
 
     .status-A-Fazer { background: #fff3cd; }
     .status-À-Entregar { background: #cce5ff; }
-    .status-Entregue { background: #d4edda; }
-    .status-Pago { background: var(--yellow); }
-    .status-Cancelado { background: #f8d7da; }
+    .status-Entregue   { background: #d4edda; }
+    .status-Pago       { background: #e9b42e; }
+    .status-Cancelado  { background: #f8d7da; }
 
     .actions button {
       margin: 2px;
@@ -136,12 +151,39 @@
       display: flex;
       justify-content: space-between;
       font-size: 0.9rem;
+      gap: 8px;
+      flex-wrap: wrap;
     }
 
-    .report {
-      margin-top: 25px;
-      border-top: 1px dashed #bbb;
-      padding-top: 15px;
+    /* AJUSTES ESPECÍFICOS PARA TELAS PEQUENAS (iPhone etc.) */
+    @media (max-width: 600px) {
+      body {
+        padding: 8px;
+      }
+
+      .app {
+        padding: 12px;
+        border-radius: 16px;
+      }
+
+      form {
+        grid-template-columns: 1fr 1fr; /* duas colunas no celular pra não ficar muito comprido */
+        gap: 8px;
+      }
+
+      table {
+        font-size: 0.8rem;
+        min-width: 600px;
+      }
+
+      th, td {
+        padding: 6px 4px;
+      }
+
+      .totals {
+        flex-direction: column;
+        align-items: flex-start;
+      }
     }
   </style>
 </head>
@@ -209,31 +251,28 @@
     <button class="btn-primary">Adicionar</button>
   </form>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Data</th>
-        <th>Cliente</th>
-        <th>Tam.</th>
-        <th>Qtd</th>
-        <th>Sabor</th>
-        <th>R$</th>
-        <th>Total</th>
-        <th>Status</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody id="lista"></tbody>
-  </table>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Cliente</th>
+          <th>Tam.</th>
+          <th>Qtd</th>
+          <th>Sabor</th>
+          <th>R$ Unit.</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="lista"></tbody>
+    </table>
+  </div>
 
   <div class="totals">
     <span>Pedidos: <strong id="qtd">0</strong></span>
     <span>Total: <strong id="total">R$ 0,00</strong></span>
-  </div>
-
-  <div class="report">
-    <h3>Relatório Mensal</h3>
-    <p>Já integrado com base na data dos pedidos ✅</p>
   </div>
 </div>
 
@@ -241,8 +280,20 @@
 let pedidos = JSON.parse(localStorage.getItem("felito")) || [];
 const lista = document.getElementById("lista");
 
+const data       = document.getElementById("data");
+const cliente    = document.getElementById("cliente");
+const tamanho    = document.getElementById("tamanho");
+const quantidade = document.getElementById("quantidade");
+const sabor      = document.getElementById("sabor");
+const valor      = document.getElementById("valor");
+const statusSel  = document.getElementById("status");
+
 function salvar() {
   localStorage.setItem("felito", JSON.stringify(pedidos));
+}
+
+function formatarValor(v) {
+  return "R$ " + v.toFixed(2);
 }
 
 function atualizar() {
@@ -253,6 +304,8 @@ function atualizar() {
     const valorTotal = p.qtd * p.valor;
     total += valorTotal;
 
+    const statusClass = "status-" + p.status.replace(" ", "-");
+
     lista.innerHTML += `
       <tr>
         <td>${p.data}</td>
@@ -260,23 +313,37 @@ function atualizar() {
         <td>${p.tam}</td>
         <td>${p.qtd}</td>
         <td>${p.sabor}</td>
-        <td>R$ ${p.valor.toFixed(2)}</td>
-        <td>R$ ${valorTotal.toFixed(2)}</td>
-        <td><span class="status status-${p.status.replace(" ", "-")}">${p.status}</span></td>
+        <td>${formatarValor(p.valor)}</td>
+        <td>${formatarValor(valorTotal)}</td>
+        <td class="status-cell ${statusClass}">
+          <select onchange="atualizarStatus(${i}, this.value)">
+            <option ${p.status === "A Fazer" ? "selected" : ""}>A Fazer</option>
+            <option ${p.status === "À Entregar" ? "selected" : ""}>À Entregar</option>
+            <option ${p.status === "Entregue" ? "selected" : ""}>Entregue</option>
+            <option ${p.status === "Pago" ? "selected" : ""}>Pago</option>
+            <option ${p.status === "Cancelado" ? "selected" : ""}>Cancelado</option>
+          </select>
+        </td>
         <td class="actions">
-          <button onclick="remover(${i})">Excluir</button>
+          <button class="btn-secondary" onclick="remover(${i})">Excluir</button>
         </td>
       </tr>`;
   });
 
-  document.getElementById("qtd").innerText = pedidos.length;
-  document.getElementById("total").innerText = "R$ " + total.toFixed(2);
+  document.getElementById("qtd").innerText   = pedidos.length;
+  document.getElementById("total").innerText = formatarValor(total);
 }
 
 function remover(i) {
   pedidos.splice(i, 1);
   salvar();
   atualizar();
+}
+
+function atualizarStatus(i, novoStatus) {
+  pedidos[i].status = novoStatus;
+  salvar();
+  atualizar(); // pra atualizar cor da linha/status
 }
 
 document.getElementById("form").onsubmit = e => {
@@ -288,20 +355,15 @@ document.getElementById("form").onsubmit = e => {
     qtd: +quantidade.value,
     sabor: sabor.value,
     valor: +valor.value,
-    status: status.value
+    status: statusSel.value
   });
   salvar();
   atualizar();
   e.target.reset();
+  data.value = new Date().toISOString().slice(0, 10);
+  quantidade.value = 1;
+  statusSel.value = "A Fazer";
 };
-
-const data = document.getElementById("data");
-const cliente = document.getElementById("cliente");
-const tamanho = document.getElementById("tamanho");
-const quantidade = document.getElementById("quantidade");
-const sabor = document.getElementById("sabor");
-const valor = document.getElementById("valor");
-const status = document.getElementById("status");
 
 data.value = new Date().toISOString().slice(0, 10);
 atualizar();
@@ -309,4 +371,3 @@ atualizar();
 
 </body>
 </html>
-
